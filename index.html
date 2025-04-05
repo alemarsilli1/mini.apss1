@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mini App de Tareas</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        input { padding: 5px; width: 300px; }
+        button { padding: 5px 10px; }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Mini App de Tareas</h1>
+    
+    <!-- FRONTEND: Formulario simple para ingresar tareas -->
+    <div id="frontend">
+        <input type="text" id="taskInput" placeholder="Escribe una tarea">
+        <button id="addButton">Agregar</button>
+        <div id="message"></div>
+        <h3>Lista de Tareas:</h3>
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        // FRONTEND: Lógica de la interfaz
+        const taskInput = document.getElementById('taskInput');
+        const addButton = document.getElementById('addButton');
+        const message = document.getElementById('message');
+        const taskList = document.getElementById('taskList');
+
+        // Cargar tareas al iniciar
+        displayTasks();
+
+        // Evento de click en el botón
+        addButton.addEventListener('click', function() {
+            const taskName = taskInput.value.trim();
+            
+            // Llamada al backend
+            const response = backend.processTask(taskName);
+            
+            // Mostrar mensaje de respuesta
+            message.textContent = response.message;
+            
+            // Limpiar input y actualizar lista si fue exitoso
+            if (response.success) {
+                taskInput.value = '';
+                displayTasks();
+            }
+        });
+
+        // Función para mostrar las tareas en la lista
+        function displayTasks() {
+            // Obtener tareas del backend
+            const tasks = backend.getAllTasks();
+            
+            // Limpiar lista actual
+            taskList.innerHTML = '';
+            
+            // Mostrar cada tarea
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.textContent = task;
+                taskList.appendChild(li);
+            });
+        }
+
+        // BACKEND: Lógica de procesamiento
+        const backend = {
+            processTask: function(taskName) {
+                // Validación simple
+                if (!taskName) {
+                    return {
+                        success: false,
+                        message: "Error: La tarea no puede estar vacía"
+                    };
+                }
+                
+                // Guardar la tarea en la base de datos
+                database.saveTask(taskName);
+                
+                // Responder con mensaje de éxito
+                return {
+                    success: true,
+                    message: "Tarea guardada: " + taskName
+                };
+            },
+            
+            getAllTasks: function() {
+                // Obtener tareas de la base de datos
+                return database.getTasks();
+            }
+        };
+
+        // BASE DE DATOS: Almacenamiento simulado
+        const database = {
+            // Arreglo simple para almacenar tareas
+            tasks: [],
+            
+            saveTask: function(taskName) {
+                // Agregar la tarea al arreglo
+                this.tasks.push(taskName);
+            },
+            
+            getTasks: function() {
+                // Devolver todas las tareas
+                return this.tasks;
+            }
+        };
+    </script>
+
+    <!-- 
+    COMENTARIOS SOBRE ESCALABILIDAD, MANTENIBILIDAD y SEGURIDAD:
+    
+    1. FRONTEND:
+       - Escalabilidad: Podría separarse en archivos distintos (HTML, CSS y JS)
+         para permitir un crecimiento más organizado del código.
+       - Mantenibilidad: Implementar validaciones más robustas y manejar 
+         eventos con mejor estructura.
+       - Seguridad: Validar y sanitizar la entrada del usuario para prevenir XSS.
+    
+    2. BACKEND:
+       - Escalabilidad: Implementar un verdadero servidor (como Node.js) que 
+         pueda manejar múltiples solicitudes concurrentes.
+       - Mantenibilidad: Organizar en funciones más pequeñas con responsabilidades
+         específicas y agregar manejo de errores.
+       - Seguridad: Implementar autenticación para proteger los datos de las tareas.
+    
+    3. BASE DE DATOS:
+       - Escalabilidad: Migrar a una base de datos real como MySQL o MongoDB
+         para manejar grandes volúmenes de datos.
+       - Mantenibilidad: Crear una estructura más formal para los datos con
+         timestamps y metadatos.
+       - Seguridad: Implementar validación en la capa de datos y backup
+         automático de la información.
+    -->
+</body>
+</html>
